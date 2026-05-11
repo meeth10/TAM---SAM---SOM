@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAM · SAM · SOM — Market Sizing Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:       #0C2340;
+  --navy-mid:   #163556;
+  --navy-light: #E8EFF7;
+  --tam:        #1A4F8A;
+  --tam-light:  #C8DDF5;
+  --sam:        #2272BE;
+  --sam-light:  #B8D4F0;
+  --som:        #9C5215;
+  --som-light:  #F5DDB8;
+  --green:      #047857;
+  --red:        #B91C1C;
+  --border:     #D4DCE8;
+  --gray-50:    #F8FAFC;
+  --gray-100:   #EEF2F7;
+  --gray-400:   #8896AA;
+  --gray-600:   #4A5A70;
+  --gray-900:   #0F1C2E;
+  --white:      #FFFFFF;
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  10px;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:  0 4px 12px rgba(0,0,0,.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ─── HEADER ─── */
+.hdr {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 58px;
+  box-shadow: var(--shadow-sm);
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  background: var(--navy); display: flex; align-items: center; justify-content: center;
+}
+.logo-icon svg { width: 15px; height: 15px; fill: white; }
+.logo-name { font-family: 'DM Serif Display', Georgia, serif; font-size: 16px; color: var(--navy); }
+.logo-tag { font-size: 11px; color: var(--gray-400); letter-spacing: .03em; margin-left: 4px; }
+.tab-group { display: flex; }
+.tab-btn {
+  padding: 7px 22px; font-size: 12px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; background: var(--white);
+  border: 1px solid var(--border); color: var(--gray-600);
+  letter-spacing: .02em; transition: all .15s;
+}
+.tab-btn:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+.tab-btn:last-child  { border-radius: 0 var(--radius-md) var(--radius-md) 0; border-left: none; }
+.tab-btn.on { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+/* ─── LAYOUT ─── */
+.body { display: flex; min-height: calc(100vh - 58px); }
+.sidebar {
+  width: 272px; flex-shrink: 0;
+  background: var(--white); border-right: 1px solid var(--border);
+  padding: 22px 18px; overflow-y: auto;
+  height: calc(100vh - 58px); position: sticky; top: 58px;
+}
+.main { flex: 1; padding: 22px 24px; min-width: 0; overflow-y: auto; }
+
+/* ─── SIDEBAR ELEMENTS ─── */
+.sec {
+  font-size: 9px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--gray-400);
+  display: block; margin: 0 0 8px;
+}
+.sec-mt { margin-top: 18px; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.field { margin-bottom: 12px; }
+.field > label { font-size: 11px; color: var(--gray-600); margin-bottom: 5px; display: block; }
+.finput {
+  display: flex; align-items: center;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  overflow: hidden; background: var(--white);
+  transition: border-color .15s;
+}
+.finput:focus-within { border-color: var(--navy); }
+.fpre, .fsuf {
+  padding: 7px 10px; font-size: 12px; color: var(--gray-400);
+  background: var(--gray-50); font-family: 'DM Mono', monospace;
+  white-space: nowrap; flex-shrink: 0;
+}
+.fpre { border-right: 1px solid var(--border); }
+.fsuf { border-left: 1px solid var(--border); }
+.finput input {
+  flex: 1; padding: 7px 10px; font-size: 12px; min-width: 0;
+  font-family: 'DM Mono', monospace; background: transparent;
+  border: none; outline: none; color: var(--gray-900);
+}
+.finput input::placeholder { color: var(--gray-400); }
+
+/* Toggle group */
+.tgl { display: flex; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 12px; }
+.tgb {
+  flex: 1; padding: 7px 4px; font-size: 11px; font-weight: 500;
+  cursor: pointer; background: transparent; border: none;
+  color: var(--gray-600); font-family: 'DM Sans', sans-serif;
+  text-align: center; transition: all .15s;
+}
+.tgb + .tgb { border-left: 1px solid var(--border); }
+.tgb.on { background: var(--navy); color: var(--white); }
+
+/* Slider */
+.sr { margin-bottom: 13px; }
+.sr-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.sr-lbl { font-size: 11px; color: var(--gray-600); }
+.sr-val { font-size: 12px; font-family: 'DM Mono', monospace; font-weight: 500; }
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 2px; border-radius: 2px;
+  background: var(--border); outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; cursor: pointer;
+  border: 2px solid var(--white); box-shadow: 0 0 0 1.5px var(--border), var(--shadow-sm);
+}
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.card + .card { margin-top: 12px; }
+.card-head {
+  font-size: 10px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--gray-400); margin-bottom: 14px;
+}
+.viz-wrap {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  margin-bottom: 12px; box-shadow: var(--shadow-sm);
+}
+canvas { display: block; width: 100%; }
+
+/* Metric grid */
+.metric-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+.mc {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
+}
+.mc-accent { height: 3px; border-radius: 2px; margin-bottom: 10px; }
+.mc-val { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; letter-spacing: -.02em; }
+.mc-name { font-size: 10px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; }
+.mc-sub  { font-size: 10px; color: var(--gray-400); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+/* Button */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; background: var(--navy); color: var(--white);
+  border: none; border-radius: var(--radius-md); font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: .03em;
+  transition: background .15s; white-space: nowrap;
+}
+.btn:hover { background: var(--navy-mid); }
+.btn svg { width: 14px; height: 14px; fill: white; flex-shrink: 0; }
+
+/* ─── SCENARIO TAB ─── */
+#vs { padding: 22px 24px; }
+.sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.sc-head { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 14px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 9px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px; }
+th { font-size: 10px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; text-align: right; }
+th:first-child { text-align: left; }
+td { text-align: right; font-family: 'DM Mono', monospace; color: var(--gray-900); }
+td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--gray-600); font-weight: 500; }
+.bk { height: 26px; background: var(--gray-100); border-radius: 3px; position: relative; overflow: hidden; border: 1px solid var(--border); margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16"><path d="M1 2h14v2.5H1zm1.5 4h11v2.5h-11zm1.5 4h8v2.5H4z"/></svg>
+    </div>
+    <span class="logo-name">Market Sizing</span>
+    <span class="logo-tag">TAM · SAM · SOM</span>
+  </div>
+  <div class="tab-group">
+    <button class="tab-btn on" id="tb-m" onclick="swTab('m')">Model</button>
+    <button class="tab-btn"    id="tb-s" onclick="swTab('s')">Scenarios</button>
+  </div>
+</header>
+
+<div id="vm" class="body">
+  <aside class="sidebar" id="sb"></aside>
+  <section class="main" id="mn"></section>
+</div>
+<div id="vs" style="display:none"><div id="sc"></div></div>
+
+<script>
+/* ── STATE ── */
+const S = {
+  approach:'topdown', buMethod:'customers',
+  marketName:'', yearLabel:'2025E',
+  tdTAM:'', tdSAMPct:30, tdSOMPct:10,
+  buCust:'', buACV:'', buCustSAMx:5, buCustTAMx:5,
+  buTx:'', buTicket:'', buFreq:12, buTxSAMx:5, buTxTAMx:5,
+  bullTAM:20, bullSAM:15, bullSOM:30,
+  bearTAM:-20, bearSAM:-15, bearSOM:-30,
+};
+let tab = 'm';
+
+/* ── PALETTE (canvas only) ── */
+const CLR = {
+  bg:'#FFFFFF', bg2:'#F8FAFC',
+  navy:'#0C2340', navyMid:'#163556',
+  tam:'#1A4F8A', tamFill:'rgba(26,79,138,0.9)',
+  sam:'#2272BE', samFill:'rgba(34,114,190,0.92)',
+  som:'#9C5215', somFill:'rgba(156,82,21,0.93)',
+  border:'#D4DCE8', muted:'#8896AA', text:'#0F1C2E',
+  green:'#047857', red:'#B91C1C',
+};
+
+/* ── HELPERS ── */
+const fmt = b => {
+  if (!b || isNaN(b) || b <= 0) return '—';
+  if (b >= 1000) return '$' + (b/1000).toFixed(2) + 'T';
+  if (b >= 1)    return '$' + b.toFixed(2) + 'B';
+  if (b >= 0.001)return '$' + (b*1000).toFixed(1) + 'M';
+  return '$' + Math.round(b*1e9);
+};
+const pct = (a, b) => (!b || b <= 0) ? '—' : ((a/b)*100).toFixed(1) + '%';
+
+function compute(ta=0, sa=0, so=0) {
+  let tam=0, sam=0, som=0;
+  if (S.approach === 'topdown') {
+    tam = parseFloat(S.tdTAM) || 0;
+    sam = tam * S.tdSAMPct / 100;
+    som = sam * S.tdSOMPct / 100;
+  } else if (S.buMethod === 'customers') {
+    som = ((parseFloat(S.buCust)||0) * (parseFloat(S.buACV)||0)) / 1e9;
+    sam = som * S.buCustSAMx;
+    tam = sam * S.buCustTAMx;
+  } else {
+    som = ((parseFloat(S.buTx)||0) * (parseFloat(S.buTicket)||0) * (parseFloat(S.buFreq)||0)) / 1e9;
+    sam = som * S.buTxSAMx;
+    tam = sam * S.buTxTAMx;
+  }
+  return { tam: tam*(1+ta/100), sam: sam*(1+sa/100), som: som*(1+so/100) };
+}
+
+/* ── FUNNEL DRAW ── */
+function drawFunnel(canvas, tam, sam, som, meta=false) {
+  if (!canvas) return;
+  const ctx  = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  /* Background */
+  ctx.fillStyle = CLR.bg; ctx.fillRect(0, 0, W, H);
+
+  /* Header strip (meta/export only) */
+  const topPad = meta ? 92 : 16;
+  if (meta) {
+    ctx.fillStyle = CLR.navy; ctx.fillRect(0, 0, W, 5);
+    const title = (S.marketName || 'Market Sizing Analysis').toUpperCase();
+    ctx.fillStyle = CLR.navy;
+    ctx.font = 'bold 22px "DM Serif Display", Georgia, serif';
+    ctx.textAlign = 'left'; ctx.fillText(title, 56, 42);
+    ctx.fillStyle = CLR.muted;
+    ctx.font = '11px "DM Sans", Arial, sans-serif';
+    ctx.fillText('TAM  ·  SAM  ·  SOM  |  ' + (S.approach === 'topdown' ? 'Top-down' : 'Bottom-up') + ' approach', 56, 62);
+    ctx.textAlign = 'right';
+    ctx.fillText(S.yearLabel, W - 56, 42);
+    ctx.strokeStyle = CLR.border; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(56, 76); ctx.lineTo(W-56, 76); ctx.stroke();
+  }
+
+  /* ── Funnel geometry ── */
+  const has  = tam > 0;
+  const topY = topPad + (meta ? 8 : 0);
+  const annW = meta ? W * 0.40 : W * 0.42; /* right label column */
+  const funnelCX  = annW / 2;
+  const maxHW = funnelCX * 0.92;          /* half-width at TAM */
+
+  const wTAM = maxHW;
+  const wSAM = has && sam > 0 ? Math.max(maxHW * (sam/tam), maxHW * 0.12) : maxHW * 0.58;
+  const wSOM = has && som > 0 ? Math.max(maxHW * (som/tam), maxHW * 0.045) : maxHW * 0.20;
+
+  const botY = H - (meta ? 96 : 14);
+  const fH   = botY - topY;
+  const gap  = Math.round(fH * 0.016);
+  const secH = Math.round((fH - gap * 2) / 3);
+
+  const sections = [
+    { key:'TAM', sub:'Total Addressable Market',      val:tam, fill:CLR.tamFill, accent:CLR.tam, wTop:wTAM, wBot:wSAM, pctStr:'100% of market' },
+    { key:'SAM', sub:'Serviceable Addressable Market', val:sam, fill:CLR.samFill, accent:CLR.sam, wTop:wSAM, wBot:wSOM, pctStr:pct(sam,tam)+' of TAM' },
+    { key:'SOM', sub:'Serviceable Obtainable Market',  val:som, fill:CLR.somFill, accent:CLR.som, wTop:wSOM, wBot:wSOM*0.65, pctStr:pct(som,sam)+' of SAM' },
+  ];
+
+  const labelFS  = meta ? 14 : 12;
+  const valFS    = meta ? 16 : 13;
+  const subFS    = meta ? 12 : 11;
+  const annX     = annW + (meta ? 36 : 24);
+
+  sections.forEach((sec, i) => {
+    const y0   = topY + i * (secH + gap);
+    const y1   = y0 + secH;
+    const midY = (y0 + y1) / 2;
+    const x0L  = funnelCX - sec.wTop;
+    const x0R  = funnelCX + sec.wTop;
+    const x1L  = funnelCX - sec.wBot;
+    const x1R  = funnelCX + sec.wBot;
+
+    /* Trapezoid */
+    ctx.beginPath();
+    ctx.moveTo(x0L, y0); ctx.lineTo(x0R, y0);
+    ctx.lineTo(x1R, y1); ctx.lineTo(x1L, y1);
+    ctx.closePath();
+    ctx.fillStyle = sec.fill; ctx.fill();
+
+    /* Thin top edge line */
+    if (i > 0) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0L, y0); ctx.lineTo(x0R, y0); ctx.stroke();
+    }
+
+    /* Label inside */
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.font = `600 ${labelFS}px "DM Sans", Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(sec.key, funnelCX, midY - (meta ? 8 : 6));
+    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+    ctx.font = `${subFS}px "DM Mono", monospace`;
+    ctx.fillText(fmt(sec.val), funnelCX, midY + (meta ? 12 : 9));
+
+    /* Connector dot */
+    const dotX = x1R + 4;
+    ctx.strokeStyle = CLR.border; ctx.lineWidth = 0.75; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(dotX, midY); ctx.lineTo(annX - 8, midY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = sec.accent;
+    ctx.beginPath(); ctx.arc(annX - 8, midY, 3.5, 0, Math.PI*2); ctx.fill();
+
+    /* Right annotation */
+    ctx.fillStyle = CLR.text;
+    ctx.font = `500 ${subFS}px "DM Sans", Arial, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(sec.sub, annX, midY - (meta ? 12 : 10));
+    ctx.fillStyle = sec.accent;
+    ctx.font = `700 ${valFS}px "DM Mono", monospace`;
+    ctx.fillText(fmt(sec.val), annX, midY + (meta ? 7 : 6));
+    ctx.fillStyle = CLR.muted;
+    ctx.font = `${meta?11:10}px "DM Sans", Arial, sans-serif`;
+    ctx.fillText(sec.pctStr, annX, midY + (meta ? 24 : 20));
+  });
+
+  /* ── Summary strip (export only) ── */
+  if (meta) {
+    const sy = botY + 14;
+    ctx.fillStyle = CLR.bg2; ctx.fillRect(56, sy, W-112, 56);
+    ctx.strokeStyle = CLR.border; ctx.lineWidth = 0.5; ctx.strokeRect(56, sy, W-112, 56);
+    ctx.fillStyle = CLR.navy; ctx.fillRect(56, sy, 4, 56);
+
+    const cols = [
+      { l:'TAM', v:fmt(tam), c:CLR.tam },
+      { l:'SAM', v:fmt(sam), c:CLR.sam },
+      { l:'SOM', v:fmt(som), c:CLR.som },
+      { l:'SAM / TAM', v:pct(sam,tam), c:CLR.muted },
+      { l:'SOM / SAM', v:pct(som,sam), c:CLR.muted },
+    ];
+    const cw = (W-116) / cols.length;
+    cols.forEach((c, i) => {
+      const x = 60 + i*cw + cw/2;
+      ctx.fillStyle = c.c; ctx.font = '700 16px "DM Mono",monospace'; ctx.textAlign = 'center';
+      ctx.fillText(c.v, x, sy+26);
+      ctx.fillStyle = CLR.muted; ctx.font = '9px "DM Sans",sans-serif';
+      ctx.fillText(c.l, x, sy+44);
+      if (i < cols.length-1) {
+        ctx.strokeStyle = CLR.border; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(60+cw*(i+1), sy+10); ctx.lineTo(60+cw*(i+1), sy+46); ctx.stroke();
+      }
+    });
+
+    /* Footer */
+    const fy = sy+70;
+    ctx.strokeStyle = CLR.navy; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(56,fy); ctx.lineTo(W-56,fy); ctx.stroke();
+    ctx.fillStyle = CLR.muted; ctx.font = '9px "DM Sans",sans-serif';
+    ctx.textAlign = 'left';  ctx.fillText('Confidential  ·  For internal use only', 56, fy+14);
+    ctx.textAlign = 'right'; ctx.fillText('Market sizing model  ·  ' + S.yearLabel, W-56, fy+14);
+  }
+}
+
+/* ── EXPORT ── */
+function exportPNG() {
+  const c = document.createElement('canvas');
+  c.width = 1200; c.height = 740;
+  const base = compute();
+  drawFunnel(c, base.tam, base.sam, base.som, true);
+  const a = document.createElement('a');
+  a.download = 'market-sizing' + (S.marketName ? '-'+S.marketName.toLowerCase().replace(/\s+/g,'-') : '') + '.png';
+  a.href = c.toDataURL('image/png'); a.click();
+}
+
+/* ── EVENT HANDLERS ── */
+function onSlider(key, val) {
+  S[key] = val;
+  const sp = document.getElementById('sv-'+key);
+  if (sp) {
+    const u = sp.dataset.unit || '%';
+    sp.textContent = (val > 0 && u === '%' ? '+' : '') + val + u;
+  }
+  if (tab === 'm') updateViz(); else updateSCData();
+}
+function onInput(key, val) { S[key] = val; if (tab === 'm') updateViz(); }
+
+function updateViz() {
+  const base = compute();
+  const canvas = document.getElementById('viz');
+  if (canvas) drawFunnel(canvas, base.tam, base.sam, base.som, false);
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('mv-tam', fmt(base.tam)); set('mv-sam', fmt(base.sam)); set('mv-som', fmt(base.som));
+  set('ms-sam', pct(base.sam, base.tam) + ' of TAM');
+  set('ms-som', pct(base.som, base.sam) + ' of SAM · ' + pct(base.som, base.tam) + ' of TAM');
+}
+
+/* ── TEMPLATES ── */
+function iH(id, label, key, type, val, pre, suf) {
+  return `<div class="field"><label for="${id}">${label}</label>
+    <div class="finput">
+      ${pre ? `<span class="fpre">${pre}</span>` : ''}
+      <input id="${id}" type="${type||'number'}" value="${val||''}" placeholder="0"
+        oninput="onInput('${key}',this.value)">
+      ${suf ? `<span class="fsuf">${suf}</span>` : ''}
+    </div></div>`;
+}
+
+function slH(label, key, min, max, step, unit, color) {
+  const v = S[key], u = unit || '%';
+  return `<div class="sr">
+    <div class="sr-hdr">
+      <span class="sr-lbl">${label}</span>
+      <span class="sr-val" id="sv-${key}" data-unit="${u}"
+        style="color:${color||'var(--navy)'}">${v>0&&u==='%'?'+':''}${v}${u}</span>
+    </div>
+    <input type="range" min="${min}" max="${max}" step="${step||1}" value="${v}"
+      style="-webkit-slider-thumb:accent-color:${color||'var(--navy)'};accent-color:${color||'var(--navy)'}"
+      oninput="onSlider('${key}',+this.value)">
+  </div>`;
+}
+
+/* ── RENDER SIDEBAR ── */
+function renderSB() {
+  let h = `
+    <span class="sec">Market info</span>
+    ${iH('f-mn','Company / market name','marketName','text',S.marketName,'','')}
+    ${iH('f-yl','Year label','yearLabel','text',S.yearLabel,'','')}
+    <div class="divider"></div>
+    <span class="sec">Approach</span>
+    <div class="tgl">
+      <button class="tgb${S.approach==='topdown'?' on':''}" onclick="S.approach='topdown';renderSB();updateViz()">Top-down</button>
+      <button class="tgb${S.approach==='bottomup'?' on':''}" onclick="S.approach='bottomup';renderSB();updateViz()">Bottom-up</button>
+    </div>`;
+
+  if (S.approach === 'topdown') {
+    h += `<span class="sec sec-mt">Inputs</span>
+      ${iH('f-td','TAM — from report or database','tdTAM','number',S.tdTAM,'$','Bn')}
+      ${slH('SAM as % of TAM','tdSAMPct',1,100,1,'%','var(--sam)')}
+      ${slH('SOM as % of SAM','tdSOMPct',1,100,1,'%','var(--som)')}`;
+  } else {
+    h += `<span class="sec sec-mt">Method</span>
+      <div class="tgl">
+        <button class="tgb${S.buMethod==='customers'?' on':''}" onclick="S.buMethod='customers';renderSB();updateViz()">Customers × ACV</button>
+        <button class="tgb${S.buMethod==='transactions'?' on':''}" onclick="S.buMethod='transactions';renderSB();updateViz()">Tx × Ticket × Freq</button>
+      </div>
+      <span class="sec sec-mt">Inputs</span>`;
+    if (S.buMethod === 'customers') {
+      h += iH('f-bc','Target addressable customers','buCust','number',S.buCust,'','')
+        + iH('f-ba','ACV / ARPU per customer','buACV','number',S.buACV,'$','/yr')
+        + slH('SAM = SOM ×','buCustSAMx',1,50,1,'×','var(--sam)')
+        + slH('TAM = SAM ×','buCustTAMx',1,50,1,'×','var(--tam)');
+    } else {
+      h += iH('f-bt','Target transaction volume','buTx','number',S.buTx,'','')
+        + iH('f-bk','Average ticket size','buTicket','number',S.buTicket,'$','')
+        + slH('Frequency per year','buFreq',1,365,1,'×','var(--gray-600)')
+        + slH('SAM = SOM ×','buTxSAMx',1,50,1,'×','var(--sam)')
+        + slH('TAM = SAM ×','buTxTAMx',1,50,1,'×','var(--tam)');
+    }
+  }
+  document.getElementById('sb').innerHTML = h;
+}
+
+/* ── RENDER MAIN ── */
+function renderMN() {
+  document.getElementById('mn').innerHTML = `
+    <div class="viz-wrap">
+      <canvas id="viz" width="960" height="520"></canvas>
+    </div>
+    <div class="metric-grid">
+      <div class="mc">
+        <div class="mc-accent" style="background:var(--tam)"></div>
+        <div class="mc-val" style="color:var(--tam)" id="mv-tam">—</div>
+        <div class="mc-name">Total addressable market</div>
+        <div class="mc-sub">100% of market</div>
+      </div>
+      <div class="mc">
+        <div class="mc-accent" style="background:var(--sam)"></div>
+        <div class="mc-val" style="color:var(--sam)" id="mv-sam">—</div>
+        <div class="mc-name">Serviceable addressable</div>
+        <div class="mc-sub" id="ms-sam">—</div>
+      </div>
+      <div class="mc">
+        <div class="mc-accent" style="background:var(--som)"></div>
+        <div class="mc-val" style="color:var(--som)" id="mv-som">—</div>
+        <div class="mc-name">Serviceable obtainable</div>
+        <div class="mc-sub" id="ms-som">—</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--gray-400)">Exports as 1200 × 740 px — white background, deck-ready</span>
+      <button class="btn" onclick="exportPNG()">
+        <svg viewBox="0 0 16 16"><path d="M8 1v9M5 7l3 3 3-3M2 12v2h12v-2"/></svg>
+        Export PNG
+      </button>
+    </div>`;
+  requestAnimationFrame(updateViz);
+}
+
+/* ── RENDER SCENARIOS ── */
+function renderSC() {
+  document.getElementById('sc').innerHTML = `
+    <div style="max-width:900px">
+    <div class="sc-grid">
+      <div class="card">
+        <div class="sc-head" style="color:var(--green)">↑ Bull case adjustments</div>
+        ${slH('TAM adjustment','bullTAM',0,100,1,'%','var(--green)')}
+        ${slH('SAM adjustment','bullSAM',0,100,1,'%','var(--green)')}
+        ${slH('SOM adjustment','bullSOM',0,100,1,'%','var(--green)')}
+      </div>
+      <div class="card">
+        <div class="sc-head" style="color:var(--red)">↓ Bear case adjustments</div>
+        ${slH('TAM adjustment','bearTAM',-80,0,1,'%','var(--red)')}
+        ${slH('SAM adjustment','bearSAM',-80,0,1,'%','var(--red)')}
+        ${slH('SOM adjustment','bearSOM',-80,0,1,'%','var(--red)')}
+      </div>
+    </div>
+    <div id="sc-d"></div></div>`;
+  updateSCData();
+}
+
+function updateSCData() {
+  const base = compute();
+  const bull = compute(S.bullTAM, S.bullSAM, S.bullSOM);
+  const bear = compute(S.bearTAM, S.bearSAM, S.bearSOM);
+  const td = document.getElementById('sc-d'); if (!td) return;
+  const rows = [
+    { l:'TAM', b:bear.tam, bs:base.tam, bu:bull.tam },
+    { l:'SAM', b:bear.sam, bs:base.sam, bu:bull.sam },
+    { l:'SOM', b:bear.som, bs:base.som, bu:bull.som },
+    { l:'SAM / TAM', b:pct(bear.sam,bear.tam), bs:pct(base.sam,base.tam), bu:pct(bull.sam,bull.tam), p:1 },
+    { l:'SOM / SAM', b:pct(bear.som,bear.sam), bs:pct(base.som,base.sam), bu:pct(bull.som,bull.sam), p:1 },
+  ];
+  td.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-head">Scenario comparison</div>
+      <table><thead><tr>
+        <th style="text-align:left">Metric</th>
+        <th style="color:var(--red)">Bear</th>
+        <th>Base</th>
+        <th style="color:var(--green)">Bull</th>
+      </tr></thead><tbody>
+        ${rows.map(r=>`<tr>
+          <td>${r.l}</td>
+          <td style="color:var(--red)">${r.p?r.b:fmt(r.b)}</td>
+          <td style="font-weight:500">${r.p?r.bs:fmt(r.bs)}</td>
+          <td style="color:var(--green)">${r.p?r.bu:fmt(r.bu)}</td>
+        </tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-head" style="margin-bottom:6px">Range visualization</div>
+      <div style="display:flex;gap:12px;font-size:11px;color:var(--gray-400);margin-bottom:12px">
+        <span style="color:var(--red)">■ bear</span>
+        <span>■ base</span>
+        <span style="color:var(--green)">■ bull</span>
+      </div>
+      ${['tam','sam','som'].map(k=>{
+        const max=Math.max(bull[k],.001);
+        const bp=(Math.min(bear[k]/max,1)*100).toFixed(1);
+        const bsp=(Math.min(base[k]/max,1)*100).toFixed(1);
+        return `<div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:500;color:var(--gray-600);margin-bottom:4px">${k.toUpperCase()}</div>
+          <div class="bk">
+            <div style="position:absolute;inset:0;background:rgba(4,120,87,.07)"></div>
+            <div style="position:absolute;left:0;top:0;height:100%;width:${bsp}%;background:rgba(26,79,138,.1);border-right:2px solid rgba(26,79,138,.25)"></div>
+            <div style="position:absolute;left:0;top:0;height:100%;width:${bp}%;background:rgba(185,28,28,.08);border-right:2px solid rgba(185,28,28,.3)"></div>
+            <div style="position:absolute;right:10px;top:0;height:100%;display:flex;align-items:center;gap:12px;font-size:11px;font-family:'DM Mono',monospace">
+              <span style="color:var(--red)">${fmt(bear[k])}</span>
+              <span style="font-weight:500">${fmt(base[k])}</span>
+              <span style="color:var(--green)">${fmt(bull[k])}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+/* ── TAB SWITCH ── */
+function swTab(t) {
+  tab = t;
+  document.getElementById('vm').style.display = t === 'm' ? 'flex' : 'none';
+  document.getElementById('vs').style.display = t === 's' ? 'block' : 'none';
+  document.getElementById('tb-m').className = 'tab-btn' + (t === 'm' ? ' on' : '');
+  document.getElementById('tb-s').className = 'tab-btn' + (t === 's' ? ' on' : '');
+  if (t === 'm') { renderSB(); renderMN(); } else renderSC();
+}
+
+/* ── INIT ── */
+renderSB(); renderMN();
+window.addEventListener('resize', () => { if (tab === 'm') updateViz(); });
+</script>
+</body>
+</html>
